@@ -1,0 +1,95 @@
+# ---------------------------------------------------------------
+# Single-cell data objects — NEVER commit these.
+# These are hundreds of MB to several GB. GitHub warns at 50 MB
+# per file and hard-blocks at 100 MB. Data belongs in GEO, not Git.
+# ---------------------------------------------------------------
+*.h5ad
+*.loom
+*.h5
+*.hdf5
+*.mtx
+*.mtx.gz
+*.rds
+*.RDS
+*.RData
+barcodes.tsv*
+features.tsv*
+genes.tsv*
+
+# ---------------------------------------------------------------
+# Generated results — these come back out of the scripts, so
+# tracking them just creates noise. Anyone can regenerate them.
+# ---------------------------------------------------------------
+qc_mito_ribo_per_sample.csv
+qc_pct_mt.npy
+qc_pct_ribo.npy
+*.npy
+11genes.csv
+
+# scanpy writes plots into ./figures/ automatically
+figures/
+
+# CellChat outputs
+CellChat/
+Trajectory_arrows/
+
+# ---------------------------------------------------------------
+# BUT: keep the small metadata files. They ARE the experiment —
+# which sample is which condition and age. Tiny and essential.
+# The "!" un-ignores them if a rule above caught them.
+# ---------------------------------------------------------------
+!sample_metadata.csv
+!*_metadata.csv
+
+# ---------------------------------------------------------------
+# Python housekeeping
+# ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Secrets — API keys, tokens, passwords. If you ever make this repo
+# public, this line is the difference between fine and very bad.
+.env
+*.key
+
+# ---------------------------------------------------------------
+# R housekeeping. Note: .Rproj.user/ is machine-specific junk, but a
+# .Rproj file itself is the project definition and IS normally committed.
+# ---------------------------------------------------------------
+.Rhistory
+.Rapp.history
+.Rproj.user/
+
+# ---------------------------------------------------------------
+# Editor settings. Machine-specific — VS Code and PyCharm drop these
+# into project folders on their own, and your setup isn't part of
+# the analysis.
+# ---------------------------------------------------------------
+.vscode/
+.idea/
+*.log
+
+# ---------------------------------------------------------------
+# Operating system junk. macOS scatters .DS_Store into every
+# folder you open in Finder. Windows does Thumbs.db.
+# You work on both, so ignore both.
+# ---------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------------
+# Scratch space. Anything you park in scratch/ is invisible to Git —
+# a safe place for half-finished experiments you don't want to commit.
+# ---------------------------------------------------------------
+scratch/
+tmp/
+*.tmp
+*~

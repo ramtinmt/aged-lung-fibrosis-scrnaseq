@@ -1,0 +1,9 @@
+file,type,sample,age
+I73T_Naive_3M.h5ad,WT,WT_5,3 Months
+I73T_Naive_18M.h5ad,WT,WT_6,18 Months
+I73T_d28_3M_1.h5ad,I73T_Week_4,I73T_Week_4_5,3 Months
+I73T_d28_3M_2.h5ad,I73T_Week_4,I73T_Week_4_6,3 Months
+I73T_d28_18M_1.h5ad,I73T_Week_4_18M,I73T_Week_4_18M_1,18 Months
+I73T_d28_18M_2.h5ad,I73T_Week_4_18M,I73T_Week_4_18M_2,18 Months
+I73T_d28_Neran_3M.h5ad,Nerandomilast,Nerandomilast_3M,3 Months
+I73T_d28_Neran_18M.h5ad,Nerandomilast_18M,Nerandomilast_18M,18 Months
