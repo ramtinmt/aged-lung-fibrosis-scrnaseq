@@ -1,8 +1,7 @@
 """
 Batch integration with scVI.
 
-Set DATA in config.py before running. GPU is recommended; training runs on
-CPU but is very slow.
+GPU is recommended; training runs on CPU but is very slow.
 """
 import scanpy as sc
 import scvi
