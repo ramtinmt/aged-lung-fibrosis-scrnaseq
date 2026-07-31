@@ -30,7 +30,7 @@ have n = 1. Treat between-condition differences as exploratory — this design
 supports describing cell-state shifts, not formal per-sample statistics.
 
 Sample-to-condition mapping lives in `sample_metadata.csv` (columns:
-`file`, `type`, `sample`, `bead`, `age`). Every script reads condition labels
+`file`, `type`, `sample`, `age`). Every script reads condition labels
 from this file rather than parsing filenames — if you add a sample, edit the
 manifest, not the code.
 
@@ -42,10 +42,10 @@ forever, so committing them would permanently bloat the repo.
 
 <!-- TODO: fill in once deposited -->
 - Raw / processed data: GEO accession `GSE_______`
-- Working copies live on the lab workstation under `lab/SPC & Nerandomilast/`
+- Working copies live on the lab workstation under `lab/nerandomilast/`
 
-To reproduce: download the samples, put them in one folder, and point
-`sample_metadata.csv` at them.
+To reproduce: download the samples into one folder, then set `DATA` in
+`config.py` to point at it. That is the only path anything needs.
 
 ## Pipeline
 
@@ -54,17 +54,17 @@ Run in this order. Each step writes a file the next step reads.
 | # | Step | Script | In → Out |
 | --- | --- | --- | --- |
 | 1 | Convert GEO looms | `loom_to_h5ad.py` | `*.loom` → `*.h5ad` |
-| 2 | Choose QC cutoffs | `qc_mito_ribo.py` | all samples → `qc_mito_ribo_per_sample.csv` |
-| 3 | Filter + normalize | `preprocessing.ipynb` | per-sample `.h5ad` → `SPC_Nerandomilast_preprocessed.h5ad` |
-| 4 | Batch integration | `integration_code.ipynb` | preprocessed → `SPC_Nerandomilast_integrated.h5ad` |
-| 5 | Cluster + annotate | `Annotation_code.ipynb` | integrated → annotated `.h5ad` (+ per-compartment files) |
+| 2 | Filter + normalize | `preprocessing.ipynb` | per-sample `.h5ad` → `nerandomilast_preprocessed.h5ad` |
+| 3 | Batch integration | `integration.py` | preprocessed → `nerandomilast_integrated.h5ad` |
+| 4 | Compartments | `Annotation_code.ipynb` | integrated → `nerandomilast_annotated.h5ad` + one file per compartment |
+| 5 | Fine annotation | *not yet in this repo* | each compartment → annotated with `cell_type` |
 | 6 | Composition plots | `frequency_analysis.py` | annotated → stacked bar chart |
 | 7 | Signalling trajectory | `cellchat_trajectory_plot.R` | CellChat strengths CSV → trajectory PDF/PNG |
 
-**Steps 3–5 are notebooks on purpose.** Each one requires looking at output to
-decide what happens next — QC violins in step 3, marker genes and clustering
-resolution in step 5. Steps 1, 2, 6 and 7 are scripts because they are pure
-transformations with no human in the loop.
+**Steps 2, 4 and 5 are notebooks on purpose.** Each one requires looking at
+output to decide what happens next — QC violins in step 2, marker genes and
+clustering resolution in steps 4 and 5. Steps 1, 3, 6 and 7 are scripts because
+they are pure transformations with no human in the loop.
 
 ### 1. Loom → h5ad (`loom_to_h5ad.py`)
 
@@ -78,30 +78,25 @@ non-zero counts match the source exactly.
 > ⚠️ **This script deletes the source `.loom` files and rewrites the manifest
 > after a successful conversion.** Keep a backup of the raw downloads.
 
-### 2. QC threshold selection (`qc_mito_ribo.py`)
-
-Does not modify data. Computes mitochondrial and ribosomal fractions per cell
-across every sample, pools them, and reports how many cells each candidate
-cutoff would remove — so the thresholds in step 3 are chosen from this dataset
-rather than copied from a tutorial. Rerun it if samples are added.
-
-### 3. Preprocessing (`preprocessing.ipynb`)
+### 2. Preprocessing (`preprocessing.ipynb`)
 
 Per sample, then concatenated:
 
 - `min_genes = 200`, `min_cells = 3`
 - gene counts trimmed to the **2nd–99th percentile** (per sample, so it adapts
   to differing sequencing depth rather than imposing one global cutoff)
-- `pct_counts_mt < 10`  ← chosen from step 2
+- `pct_counts_mt < 10`
 - `pct_counts_ribo < 20`
 - raw counts preserved in `.layers['counts']` **before** normalization —
-  scVI (step 4) and any DE test need integer counts, not log-normalized values
+  scVI (step 3) and any DE test need integer counts, not log-normalized values
 - `normalize_total(target_sum=1e4)` → `log1p`
+
+Thresholds are the standard ones for mouse single-cell data.
 
 Ends with QC violins per sample. **Look at them.** If one sample looks unlike
 the others after filtering, that is worth knowing before it propagates.
 
-### 4. Integration (`integration_code.ipynb`)
+### 3. Integration (`integration.py`)
 
 3000 highly variable genes (`seurat_v3`, computed per sample so no single
 sample dominates), then scVI with `batch_key='sample'`, default architecture
@@ -109,9 +104,9 @@ and training schedule. The latent representation is written to
 `.obsm['X_scVI']` on the **full** gene set — HVG selection is used for training
 only, so all genes stay available for marker inspection.
 
-Runs on Colab for the GPU. CPU training works but is slow.
+A GPU is recommended. CPU training works but is slow.
 
-### 5. Clustering and annotation (`Annotation_code.ipynb`)
+### 4. Compartments (`Annotation_code.ipynb`)
 
 Neighbours on `X_scVI` → UMAP → Leiden at `resolution = 0.1` for broad
 compartments (epithelial / mesenchymal / immune / endothelial), confirmed
@@ -126,12 +121,17 @@ against canonical markers:
 | `Msln` | mesothelial |
 | `Mki67` | proliferating |
 
-Compartments are then split into separate objects and re-clustered at higher
-resolution for fine cell-type calls.
+Each compartment is then written out as its own object for step 5.
 
-This is the most exploratory step in the pipeline. The committed notebook shows
-the path that was actually taken — earlier resolutions and abandoned labellings
-are in the Git history, not in the file.
+Cluster numbers are tied to one specific scVI run — rerunning integration
+renumbers them, and the cluster-to-compartment mapping has to be redone.
+
+### 5. Fine annotation
+
+Each compartment is re-clustered on its own at a higher resolution, marker
+genes are inspected, and clusters are assigned a `cell_type` label.
+
+**Not yet in this repo** — one notebook per compartment still to be added.
 
 ### 6–7. Downstream
 
@@ -163,11 +163,11 @@ install.packages(c("ggplot2", "ggrepel"))
 
 ```
 .
+├── config.py                    # EDIT THIS: where the data lives
 ├── loom_to_h5ad.py              # 1. format conversion
-├── qc_mito_ribo.py              # 2. threshold selection
-├── preprocessing.ipynb          # 3. filter + normalize
-├── integration_code.ipynb       # 4. scVI
-├── Annotation_code.ipynb        # 5. cluster + annotate
+├── preprocessing.ipynb          # 2. filter + normalize
+├── integration.py               # 3. scVI
+├── Annotation_code.ipynb        # 4. compartments
 ├── frequency_analysis.py        # 6. composition figures
 ├── cellchat_trajectory_plot.R   # 7. signalling trajectory
 ├── sample_metadata.csv          # sample → condition mapping
@@ -178,13 +178,12 @@ install.packages(c("ggplot2", "ggrepel"))
 
 Honest list of what is not yet in this repo:
 
-- **Paths are hard-coded** to specific machines (lab workstation, laptop,
-  Colab). Set the data directory once at the top of each script.
+- **Fine annotation notebooks are missing** — step 5. The `cell_type` labels
+  that every downstream figure depends on are not yet documented here.
 - **The CellChat run itself is not here** — only the plotting script. The code
   that builds the CellChat objects lives on the lab workstation.
-- **`sample_metadata.csv` and `preprocessing.ipynb` disagree**: the notebook
-  expects a `Model` column and reads `.xlsx`; the current manifest has `bead`
-  and is `.csv`. Reconcile before rerunning.
+- **`loom_to_h5ad.py`, `frequency_analysis.py` and `cellchat_trajectory_plot.R`
+  still have hard-coded paths** and have not been updated to use `config.py`.
 - **`type` pools ages for WT but not for other conditions** (`WT` covers both
   3M and 18M, while `I73T_Week_4` and `I73T_Week_4_18M` are separate). Any
   `groupby('type')` therefore merges young and old controls. Group by
