@@ -121,7 +121,14 @@ against canonical markers:
 | `Msln` | mesothelial |
 | `Mki67` | proliferating |
 
-Each compartment is then written out as its own object for step 5.
+**Endothelial cells are excluded here.** `Pecam1`-defined clusters (5,123 cells)
+are identified and dropped rather than carried forward — this analysis concerns
+the epithelial, mesenchymal and immune response to nerandomilast, and the
+endothelium was not part of the question. A further 234 cells fell into clusters
+with no clear compartment identity and were dropped with them.
+
+Epithelial, mesenchymal and immune are each written out as their own object for
+step 5.
 
 Cluster numbers are tied to one specific scVI run — rerunning integration
 renumbers them, and the cluster-to-compartment mapping has to be redone.
@@ -130,6 +137,18 @@ renumbers them, and the cluster-to-compartment mapping has to be redone.
 
 Each compartment is re-clustered on its own at a higher resolution, marker
 genes are inspected, and clusters are assigned a `cell_type` label.
+
+Curation happens here as well as labelling. Clusters were removed when they
+co-expressed markers of another compartment — most often residual `Pecam1`
+endothelium surviving the split — or showed no distinguishing marker alongside
+a high mitochondrial fraction. Across the three compartments this removed a
+further 6,708 cells as junk or doublets.
+
+This was iterative: compartments were re-clustered and inspected over several
+passes, and cluster numbering changed between them. **The per-pass cluster
+numbers are therefore not recoverable, and this repo does not claim to
+regenerate them.** What is fixed is the outcome — the `cell_type` labels on the
+final object, which is what every downstream figure reads.
 
 **Not yet in this repo** — one notebook per compartment still to be added.
 
@@ -140,6 +159,29 @@ condition. `cellchat_trajectory_plot.R` plots incoming vs outgoing signalling
 strength for one cell type across conditions, drawing an arrow along
 `WT → I73T_Week_4 → Nerandomilast` to show whether treatment returns signalling
 toward baseline.
+
+## Cell counts
+
+Where cells were lost between integration and the final annotated object:
+
+| Stage | Cells | Change |
+| --- | --- | --- |
+| After preprocessing and integration | 113,434 | — |
+| Endothelial not carried forward | 108,311 | −5,123 |
+| `other` not carried forward | 108,077 | −234 |
+| Junk, doublets and residual endothelium removed per compartment | **101,369** | −6,708 |
+
+No cells are removed at the compartment split itself — endothelial and `other`
+are simply not carried into the three objects that go forward. All quality
+filtering after integration happens inside the individual compartment objects,
+where each is re-clustered at a resolution fine enough to separate junk from
+real populations.
+
+12,065 cells in total, spread proportionally across all 8 samples (873–2,670
+each, tracking sample size) — the losses are not concentrated in any one sample.
+
+The 101,369 remaining cells carry 47 `cell_type` labels across three
+compartments, and are the basis of every figure below.
 
 ## Environment
 
