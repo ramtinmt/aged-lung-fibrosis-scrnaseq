@@ -1,9 +1,10 @@
 """Concatenate annotated objects into one.
 
-Runs twice, in this order - the second combination reads what the first writes:
+Runs each combination in order - the later ones read what the first writes:
 
   1. the three annotated immune lineages  -> immune_annotated.h5ad
   2. the three annotated compartments     -> nerandomilast_annotated.h5ad
+  3. mesenchyme + immune                  -> mes_immune.h5ad
 
 All paths are relative to DATA in config.py.
 
@@ -15,7 +16,7 @@ import scanpy as sc
 from config import DATA
 
 # order matters: immune_annotated.h5ad is written by the first combination and
-# read by the second
+# read by the two after it
 COMBINATIONS = [
     (['lymphocytes_annotated.h5ad',
       'granulocytes_annotated.h5ad',
@@ -24,6 +25,9 @@ COMBINATIONS = [
     (['epithelial_annotated.h5ad',
       'mesenchyme_annotated.h5ad',
       'immune_annotated.h5ad'], 'nerandomilast_annotated.h5ad'),
+
+    (['mesenchyme_annotated.h5ad',
+      'immune_annotated.h5ad'], 'mes_immune.h5ad'),
 ]
 
 for inputs, output in COMBINATIONS:
