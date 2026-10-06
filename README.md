@@ -4,7 +4,19 @@ Single-cell analysis of the *Sftpc*<sup>I73T</sup> mouse model of pulmonary
 fibrosis, testing whether the PDE4B inhibitor **nerandomilast** resolves
 fibrosis differently in **young (3-month)** versus **aged (18-month)** lungs.
 
-<!-- TODO: one sentence on what you actually found. Write this last. -->
+**Status:** manuscript in preparation (first author); abstract submitted to
+ATS 2027. Data will be released on publication.
+
+## At a glance
+
+- **101,369 cells** from 8 mouse lung samples, annotated into **47 cell types**
+  across epithelial, mesenchymal and immune compartments
+- **Python:** Scanpy for QC, normalisation and clustering; **scVI** (a
+  variational autoencoder) for batch integration
+- **R:** CellChat for cell–cell signalling, focused on BAFF signalling from
+  follicular dendritic cells to B cells
+- Reproducible pipeline: a single config file for paths, a sample manifest
+  instead of filename parsing, and cell counts tracked at every filtering step
 
 ## The question
 
@@ -40,8 +52,7 @@ manifest, not the code.
 objects run to hundreds of MB each; Git stores every version of every file
 forever, so committing them would permanently bloat the repo.
 
-<!-- TODO: fill in once deposited -->
-- Raw / processed data: GEO accession `GSE_______`
+- Raw / processed data: will be deposited in GEO on publication
 - Working copies live on the lab workstation under `lab/nerandomilast/`
 
 To reproduce: download the samples into one folder, then set `DATA` in
